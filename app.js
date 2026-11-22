@@ -96,6 +96,20 @@ $('#addMaterial').onclick=async()=>{
  if(mode!=='live'){toast('Cadastro persistente exige Supabase configurado.');return}
  try{await FieldDeskData.createMaterial(name,sku,quantity,minimum);await refreshLive();toast('Material adicionado.')}catch(e){toast('Erro ao adicionar material: '+e.message)}
 };
+$('#useMaterial').onclick=async()=>{
+ if(mode!=='live'){toast('Consumo de materiais exige Supabase configurado.');return}
+ if(!orders.length||!materials.length){toast('Regista primeiro uma ordem e um material.');return}
+ const orderCode=prompt('Código da ordem de trabalho:');if(!orderCode)return;
+ const order=orders.find(o=>o.id.toLowerCase()===orderCode.trim().toLowerCase());
+ if(!order||!order.dbId){toast('Ordem não encontrada.');return}
+ const materialName=prompt('Nome ou referência do material:');if(!materialName)return;
+ const material=materials.find(m=>String(m[0]).toLowerCase()===materialName.trim().toLowerCase()||String(m[1]).toLowerCase()===materialName.trim().toLowerCase());
+ if(!material||!material[4]){toast('Material não encontrado.');return}
+ const quantity=prompt('Quantidade utilizada (disponível: '+material[2]+'):');if(quantity===null)return;
+ const note=prompt('Observação (opcional):')||'';
+ try{await FieldDeskData.recordMaterial(order.dbId,material[4],quantity,note);await refreshLive();toast('Consumo registado e stock atualizado.')}
+ catch(error){toast('Não foi possível registar consumo: '+error.message)}
+};
 $('#exportCsv').onclick=()=>{
  const csv=['ID,Serviço,Cliente,Data,Técnico,Prioridade,Estado',...orders.map(o=>[o.id,o.service,o.client,o.date,o.technician,o.priority,o.status].map(v=>'"'+String(v).replaceAll('"','""')+'"').join(','))].join('\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='fielddesk-ordens.csv';a.click();URL.revokeObjectURL(a.href);
