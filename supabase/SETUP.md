@@ -56,14 +56,14 @@ Se o Supabase não estiver configurado, a aplicação apresenta dados de demonst
 ## 6. Deploy na Vercel
 
 1. Abre https://vercel.com e importa o repositório GitHub `reidoob5-ui/FieldDesk`.
-2. Para esta versão estática, não é necessário framework preset nem build command; a raiz do projeto contém `index.html`.
-3. Define a pasta raiz como `./` e publica.
-4. A Vercel fornece um domínio `.vercel.app`; podes adicionar um domínio próprio depois.
-5. No Supabase, adiciona o domínio Vercel às Redirect URLs e define-o como Site URL quando for o domínio principal.
+2. Mantém a raiz do projeto como Root Directory. Não é necessário build command para o frontend estático.
+3. Em **Project Settings → Environment Variables**, adiciona:
+   - `SUPABASE_URL` = Project URL do Supabase.
+   - `SUPABASE_PUBLISHABLE_KEY` = chave pública publishable (ou usa `SUPABASE_ANON_KEY` para a chave anon legacy).
+4. Faz Deploy e confirma que a rota `/supabase/config.js` responde com a configuração pública.
+5. No Supabase, adiciona o domínio `.vercel.app` às Redirect URLs e define-o como Site URL quando for o domínio principal.
 
-### Configuração segura no deploy
-
-A versão atual lê `supabase/config.js` como ficheiro local ignorado pelo Git. Para produção na Vercel, **não assumas que esse ficheiro local vai existir no deploy**. Antes de abrir o serviço a utilizadores, devemos criar uma configuração de build/deploy que injete apenas o Project URL e a chave pública via variáveis de ambiente Vercel. A chave pública é concebida para estar no browser; a chave `service_role` nunca deve ser exposta.
+O ficheiro `api/config.js` é uma função Vercel que expõe apenas o URL e a chave pública do Supabase ao browser. Nunca coloques `service_role` em variáveis usadas pelo frontend nem nesta função.
 
 ## 7. RPCs operacionais
 
