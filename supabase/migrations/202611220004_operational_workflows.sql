@@ -151,7 +151,7 @@ begin
 
   select * into stock_row
   from public.materials
-  where id = target_material and organization_id = target_org and active is true
+  where id = target_material and organization_id = target_org
   for update;
 
   if stock_row.id is null then
