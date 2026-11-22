@@ -1,54 +1,77 @@
-# Ligar o FieldDesk ao Supabase
+# Configurar FieldDesk com Supabase e Vercel
 
-Esta fase acrescenta o primeiro fluxo de autenticação e criação de workspace no browser. A aplicação ainda não deve ser considerada pronta para produção.
+O FieldDesk usa **Supabase para backend** e **Vercel para alojar a aplicação web**. O GitHub mantém o código-fonte e pode ser ligado à Vercel para deploy automático.
 
-## 1. Criar o projeto
-1. Cria um projeto no Supabase.
-2. Abre **Project Settings → API**.
-3. Copia o Project URL e a chave **publishable** (ou anon legacy).
+## 1. Criar o projeto Supabase
 
-## 2. Configurar o frontend
+1. Cria um projeto em https://supabase.com/dashboard.
+2. Escolhe uma região próxima dos teus utilizadores-alvo.
+3. Em **Project Settings → API**, copia o Project URL e a chave pública **publishable** (ou anon legacy).
+4. Não uses a chave `service_role` no frontend.
+
+## 2. Configurar a aplicação localmente
+
 1. Copia `supabase/config.example.js` para `supabase/config.js`.
-2. Preenche `url` e `anonKey` com os valores do teu projeto.
-3. Não uses a chave `service_role` no browser. O ficheiro local `config.js` está ignorado pelo Git.
+2. Preenche os campos `url` e `anonKey`.
+3. O ficheiro `supabase/config.js` está no `.gitignore` e não deve ser enviado para o GitHub.
+4. Serve a pasta por HTTP (não abras os ficheiros diretamente com `file://`):
+
+```bash
+python -m http.server 4173
+```
+
+Abre `http://localhost:4173/login.html`.
 
 ## 3. Aplicar as migrações
-Com Supabase CLI instalado e o projeto ligado:
+
+Com Supabase CLI instalado e autenticado:
 
 ```bash
 supabase link --project-ref YOUR_PROJECT_REF
 supabase db push
 ```
 
-Aplica as migrações por ordem, incluindo a função `create_organization`.
+As migrações criam as tabelas, RLS, onboarding de organizações, perfil de utilizador e operações seguras para estados de ordens e consumo de materiais.
 
-## 4. Configurar autenticação
-- Em **Authentication → URL Configuration**, define a URL pública do FieldDesk como Site URL.
-- Adiciona URLs de preview e localhost à lista Redirect URLs.
-- Configura SMTP próprio antes de convidar clientes em produção.
-- Para testes, podes desativar confirmação de email temporariamente; volta a ativá-la antes de produção.
+## 4. Configurar Auth
 
-## 5. Testar o fluxo
-1. Abre `login.html`.
-2. Cria uma conta e confirma o email se essa opção estiver ativa.
-3. Entra e cria um workspace.
-4. Confirma que a organização e a membership com papel `owner` aparecem no Table Editor.
+Em **Authentication → URL Configuration**:
+- Define a URL pública da aplicação como Site URL.
+- Adiciona `http://localhost:4173/**` e o domínio de produção às Redirect URLs.
+- Configura SMTP próprio antes de abrir o registo a clientes.
 
-## Limitações desta entrega
-- O dashboard atual ainda usa dados locais de demonstração; selecionar um workspace não sincroniza ainda as ordens com PostgreSQL.
-- A página de autenticação cria sessão Supabase e workspace, mas não implementa convite de equipa, recuperação de palavra-passe ou gestão de sessões.
-- Antes de produção, rever políticas RLS com testes de isolamento entre organizações e criar políticas de Storage para anexos.
+Cria uma conta em `login.html`, confirma o email se a confirmação estiver ativa e cria o primeiro workspace.
 
-## 6. Operações protegidas no servidor
+## 5. O que já comunica com a base de dados
 
-A migração `202611220004_operational_workflows.sql` acrescenta duas RPCs transacionais:
+Com Supabase configurado, sessão válida e workspace selecionado:
+- Ordens: leitura, criação e mudança de estado por RPC validada no servidor.
+- Clientes: leitura e criação.
+- Técnicos: leitura e criação.
+- Materiais: leitura e criação.
+- Cada consulta é limitada ao `organization_id` ativo e a segurança efetiva continua a ser aplicada pelas políticas RLS.
 
-- `transition_work_order_status(target_work_order, next_status, event_details)`: valida a membership, confirma se o utilizador é responsável pela operação ou técnico atribuído, valida a transição e regista o evento no histórico.
-- `record_work_order_material(target_work_order, target_material, used_quantity, usage_note)`: valida acesso e quantidade, bloqueia a linha de stock durante a operação, desconta o material e regista o consumo e o evento na mesma transação.
+Se o Supabase não estiver configurado, a aplicação apresenta dados de demonstração. Não confundas esse modo com dados persistidos na cloud.
 
-As transições permitidas são: pedido → aprovado/cancelado; aprovado → agendado/cancelado; agendado → em execução/cancelado; em execução → bloqueado/concluído; bloqueado → em execução/cancelado. Estados concluídos ou cancelados são terminais.
+## 6. Deploy na Vercel
 
-Exemplos de chamada pelo Supabase JS:
+1. Abre https://vercel.com e importa o repositório GitHub `reidoob5-ui/FieldDesk`.
+2. Para esta versão estática, não é necessário framework preset nem build command; a raiz do projeto contém `index.html`.
+3. Define a pasta raiz como `./` e publica.
+4. A Vercel fornece um domínio `.vercel.app`; podes adicionar um domínio próprio depois.
+5. No Supabase, adiciona o domínio Vercel às Redirect URLs e define-o como Site URL quando for o domínio principal.
+
+### Configuração segura no deploy
+
+A versão atual lê `supabase/config.js` como ficheiro local ignorado pelo Git. Para produção na Vercel, **não assumas que esse ficheiro local vai existir no deploy**. Antes de abrir o serviço a utilizadores, devemos criar uma configuração de build/deploy que injete apenas o Project URL e a chave pública via variáveis de ambiente Vercel. A chave pública é concebida para estar no browser; a chave `service_role` nunca deve ser exposta.
+
+## 7. RPCs operacionais
+
+`transition_work_order_status(target_work_order, next_status, event_details)` valida membership, atribuição do técnico e transições permitidas antes de atualizar o estado e gravar o evento.
+
+`record_work_order_material(target_work_order, target_material, used_quantity, usage_note)` valida acesso e stock, bloqueia a linha do material, desconta quantidade e regista o consumo na mesma transação.
+
+Exemplo:
 
 ```js
 await supabase.rpc("transition_work_order_status", {
@@ -65,4 +88,11 @@ await supabase.rpc("record_work_order_material", {
 });
 ```
 
-Estas funções estão preparadas no repositório, mas ainda não foram executadas num projeto Supabase real nem submetidas a testes de integração. O dashboard também ainda não chama estas RPCs; continua em modo de demonstração até ser feita a integração da interface.
+## 8. Limitações antes de produção
+
+- A ligação do dashboard ainda não foi testada contra um projeto Supabase real.
+- A agenda semanal e vários indicadores de relatórios ainda são demonstrativos.
+- O registo de consumo de material tem RPC no backend, mas ainda não tem formulário no dashboard.
+- Falta convite/gestão de membros, recuperação de palavra-passe, Storage e políticas para anexos.
+- Rever RLS com contas de duas organizações e testes que tentem ler/alterar dados cruzados.
+- Implementar logs, backups, monitorização, SMTP, limites de plano e billing antes do lançamento comercial.
