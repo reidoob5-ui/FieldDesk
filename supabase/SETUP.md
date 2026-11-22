@@ -92,7 +92,7 @@ await supabase.rpc("record_work_order_material", {
 
 - A ligação do dashboard ainda não foi testada contra um projeto Supabase real.
 - A agenda semanal e vários indicadores de relatórios ainda são demonstrativos.
-- O registo de consumo de material tem RPC no backend, mas ainda não tem formulário no dashboard.
+- O registo de consumo de material já está disponível na página Materiais; continua pendente testar o fluxo com stock real num projeto Supabase.
 - Falta convite/gestão de membros, recuperação de palavra-passe, Storage e políticas para anexos.
 - Rever RLS com contas de duas organizações e testes que tentem ler/alterar dados cruzados.
 - Implementar logs, backups, monitorização, SMTP, limites de plano e billing antes do lançamento comercial.
