@@ -40,9 +40,10 @@ Segue o guia [supabase/SETUP.md](./supabase/SETUP.md).
 1. Cria um projeto Supabase.
 2. Copia `supabase/config.example.js` para `supabase/config.js` e coloca o Project URL e a chave pública publishable/anon.
 3. Liga o projeto com Supabase CLI e executa `supabase db push`.
-4. Abre `/login.html`, cria uma conta e um workspace.
+4. Na Vercel, define `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` (ou `SUPABASE_ANON_KEY`) como variáveis de ambiente.
+5. Abre `/login.html`, cria uma conta e um workspace.
 
-Nunca coloques uma chave `service_role` no frontend. O ficheiro `supabase/config.js` está no `.gitignore`.
+Nunca coloques uma chave `service_role` no frontend. O ficheiro `supabase/config.js` está no `.gitignore`. Na Vercel, `api/config.js` entrega ao browser apenas as credenciais públicas configuradas no projeto.
 
 ## Estado real do produto
 
