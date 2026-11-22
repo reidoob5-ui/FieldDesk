@@ -10,6 +10,7 @@ FieldDesk é uma aplicação web responsiva e instalável (PWA) para empresas de
 - Dashboard com ordens, clientes, técnicos e materiais carregados do Supabase quando o projeto está configurado e existe uma sessão válida.
 - Criação de ordens, criação de clientes, cadastro de técnicos e materiais através do dashboard.
 - Alteração do estado das ordens através de uma RPC que valida permissões e transições no servidor.
+- Registo de consumo de materiais por ordem, com desconto de stock e histórico transacional no servidor.
 - Modo de demonstração local disponível quando não existem credenciais Supabase configuradas.
 - Agenda semanal e indicadores analíticos ainda contêm elementos demonstrativos.
 - Relatórios e exportação CSV.
