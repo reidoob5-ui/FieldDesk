@@ -1,0 +1,9 @@
+# Local Supabase browser configuration (contains project URL and public key)
+supabase/config.js
+
+# Local development
+.DS_Store
+.env
+.env.*
+!.env.example
+node_modules/
