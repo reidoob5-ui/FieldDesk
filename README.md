@@ -6,10 +6,12 @@ FieldDesk é uma aplicação web responsiva e instalável (PWA) para empresas de
 
 ## O que existe no repositório
 
-### Demonstração frontend
-- Dashboard operacional e indicadores demonstrativos.
-- Ordens de trabalho: criação, pesquisa, filtros e atualização de estado no navegador.
-- Gestão demonstrativa de técnicos, agenda, materiais e clientes.
+### Dashboard e módulos
+- Dashboard com ordens, clientes, técnicos e materiais carregados do Supabase quando o projeto está configurado e existe uma sessão válida.
+- Criação de ordens, criação de clientes, cadastro de técnicos e materiais através do dashboard.
+- Alteração do estado das ordens através de uma RPC que valida permissões e transições no servidor.
+- Modo de demonstração local disponível quando não existem credenciais Supabase configuradas.
+- Agenda semanal e indicadores analíticos ainda contêm elementos demonstrativos.
 - Relatórios e exportação CSV.
 - Interface em português, inglês e espanhol.
 - Moedas configuráveis (USD, EUR, AOA).
@@ -44,10 +46,10 @@ Nunca coloques uma chave `service_role` no frontend. O ficheiro `supabase/config
 
 ## Estado real do produto
 
-**Ainda é uma demonstração frontend com uma fundação inicial de backend.** A autenticação e a criação/seleção de workspace estão preparadas para Supabase depois de configurar as credenciais e aplicar as migrações. O dashboard principal continua a usar dados locais de demonstração e ainda não sincroniza ordens, técnicos, clientes ou materiais com PostgreSQL.
+**O dashboard já tem uma camada de integração Supabase implementada no código.** Com as credenciais configuradas, migrações aplicadas e sessão/workspace válidos, ordens, clientes, técnicos e materiais são lidos do PostgreSQL; a criação de ordens/clientes/técnicos/materiais e as alterações de estado usam operações reais. Sem credenciais, a aplicação permanece em modo de demonstração. Esta integração ainda não foi validada num projeto Supabase real nem testada em produção.
 
 Antes de produção, ainda é necessário:
-- Ligar os módulos do dashboard às tabelas reais e remover dados fictícios.
+- Completar a agenda e os relatórios com dados reais; rever os fluxos e permissões com testes automatizados.
 - Implementar convites e gestão de membros/permissões.
 - Configurar políticas de Storage para fotografias e documentos.
 - Implementar checklists, assinaturas e portal de cliente.
