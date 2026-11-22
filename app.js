@@ -37,7 +37,7 @@ function renderOrders(){
    if(mode==='live'){
      try{await FieldDeskData.changeStatus(order,next);await refreshLive();toast('Estado atualizado no servidor.')}
      catch(error){toast('Não foi possível alterar: '+error.message);renderOrders()}
-   } else {order.status=next;renderOrders();toast('Estado atualizado apenas nesta demonstração.')}
+   } else {order.status=next;localStorage.setItem('fd_orders',JSON.stringify(orders));renderOrders();toast('Estado atualizado apenas nesta demonstração.')}
  }));
  $$('[data-detail]').forEach(el=>el.addEventListener('click',()=>{let o=orders.find(x=>x.id===el.dataset.detail);toast(o.id+' · '+o.location+' · '+o.status)}));
 }
@@ -72,7 +72,7 @@ $('#orderForm').addEventListener('submit',async e=>{
  e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
  try{
   if(mode==='live'){await FieldDeskData.createOrder(d);await refreshLive();toast('Ordem gravada na base de dados.')}
-  else{orders.unshift({id:'FD-'+String(252+orders.length).padStart(4,'0'),...d,status:'Pendente'});renderOrders();toast('Ordem criada na demonstração local.')}
+  else{orders.unshift({id:'FD-'+String(252+orders.length).padStart(4,'0'),...d,status:'Pendente'});localStorage.setItem('fd_orders',JSON.stringify(orders));renderOrders();toast('Ordem criada na demonstração local.')}
   closeModal();e.target.reset();go('workorders');
  }catch(error){toast('Erro ao criar ordem: '+error.message)}
 });
@@ -103,7 +103,7 @@ $('#exportCsv').onclick=()=>{
 $('#languageSelect').value=lang;$('#currencySelect').value=currency;
 $('#languageSelect').onchange=e=>{lang=e.target.value;localStorage.setItem('fd_lang',lang);$$('[data-i18n]').forEach(el=>el.textContent=translations[lang][el.dataset.i18n]||el.textContent);toast('Idioma atualizado.')};
 $('#currencySelect').onchange=e=>{currency=e.target.value;localStorage.setItem('fd_currency',currency);toast('Moeda de apresentação atualizada.')};
-$('#resetData').onclick=()=>{if(mode==='live'){toast('Os dados reais não podem ser substituídos pelos dados de demonstração.');return}if(confirm('Restaurar os dados de demonstração?')){orders=[...seedOrders];renderOrders();toast('Dados de demonstração restaurados.')}};
+$('#resetData').onclick=()=>{if(mode==='live'){toast('Os dados reais não podem ser substituídos pelos dados de demonstração.');return}if(confirm('Restaurar os dados de demonstração?')){orders=[...seedOrders];localStorage.setItem('fd_orders',JSON.stringify(orders));renderOrders();toast('Dados de demonstração restaurados.')}};
 $('#logoutBtn')?.addEventListener('click',()=>FieldDeskData.signOut());
 (async()=>{
  try{
@@ -111,6 +111,7 @@ $('#logoutBtn')?.addEventListener('click',()=>FieldDeskData.signOut());
   if(state.mode==='redirect')return;
   if(state.mode==='live'){
    mode='live';
+   $('#logoutBtn').hidden=false;
    $('.live').innerHTML='<i></i> Ligado ao Supabase';
    $('.workspace b').textContent=state.organization?.name||sessionStorage.getItem('fd_active_org_name')||'Workspace';
    $('.workspace small').textContent='Workspace ativo · '+state.role;
@@ -119,6 +120,7 @@ $('#logoutBtn')?.addEventListener('click',()=>FieldDeskData.signOut());
    $('.top-actions .text-btn').hidden=true;
    await refreshLive();
   }else{
+   $('#logoutBtn').hidden=true;
    orders=JSON.parse(localStorage.getItem('fd_orders')||'null')||[...seedOrders];
    techs=[...seedTechs];materials=[...seedMaterials];clients=[...seedClients];
    $('.live').innerHTML='<i></i> Modo demonstração';
