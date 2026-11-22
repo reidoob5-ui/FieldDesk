@@ -133,6 +133,13 @@
     });
     if (error) throw error;
   }
+  async function recordMaterial(orderId, materialId, quantity, note) {
+    const { error } = await client.rpc("record_work_order_material", {
+      target_work_order: orderId, target_material: materialId,
+      used_quantity: Number(quantity), usage_note: note || null
+    });
+    if (error) throw error;
+  }
   async function createMaterial(name, sku, quantity, minimum) {
     const { error } = await client.from("materials").insert({
       organization_id: organizationId, name, sku: sku || null,
@@ -146,5 +153,5 @@
     sessionStorage.removeItem("fd_active_org_name");
     location.href = "./login.html";
   }
-  window.FieldDeskData = { init, loadAll, createOrder, changeStatus, createCustomer, createTechnician, createMaterial, signOut };
+  window.FieldDeskData = { init, loadAll, createOrder, changeStatus, createCustomer, createTechnician, createMaterial, recordMaterial, signOut };
 })();
