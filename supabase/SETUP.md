@@ -31,7 +31,7 @@ supabase link --project-ref YOUR_PROJECT_REF
 supabase db push
 ```
 
-As migrações criam as tabelas, RLS, onboarding de organizações, perfil de utilizador e operações seguras para estados de ordens e consumo de materiais.
+As migrações criam as tabelas, RLS, onboarding de organizações, perfil de utilizador e operações seguras para estados de ordens e consumo de materiais. A migração `202611220005_enforce_operational_rpcs.sql` também retira permissões de escrita direta que poderiam contornar essas RPCs.
 
 ## 4. Configurar Auth
 
